@@ -129,7 +129,7 @@ void Player::render(LTexture& gDotTexture)
 	gDotTexture.render(mPosX, mPosY);
 }
 
-Circle& Player::getCollider()
+const Circle& Player::getCollider()
 {
 	return mCollider;
 }
@@ -143,8 +143,8 @@ void Player::movePositionXandYForPlayer() {
 
 void Player::shiftColliders()
 {
-	mCollider.x = triangleVertex[0].position.x;
-	mCollider.y = triangleVertex[0].position.y;
+	mCollider.origin.x = triangleVertex[0].position.x;
+	mCollider.origin.y = triangleVertex[0].position.y;
 }
 
 SDL_Vertex* Player::getVertices() {

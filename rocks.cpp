@@ -135,7 +135,7 @@ Circle& Rocks::getCollider()
 
 //Moves the collision circle relative to the Rocks's offset
 void Rocks::shiftColliders() {
-	mCollider.x = m_x;
-	mCollider.y = m_y;
+	mCollider.origin.x = m_x;
+	mCollider.origin.y = m_y;
 }
 

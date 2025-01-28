@@ -8,6 +8,9 @@ static constexpr int SCREEN_HEIGHT = 480;
 
 static constexpr int number_of_rocks_being_drawn = 3;
 
+static constexpr int player_lives = 30000;
+static constexpr float player_direction = 40.0f;
+
 //won't pollute global scope with all the names in Directions
 namespace Direction {
 
@@ -24,14 +27,19 @@ namespace Direction {
 	};
 }
 
+struct Point {
+	int x;
+	int y;
+};
+
 struct Circle
 {
-	int x, y;
+	Point origin;
 	int r;
 };
 
 //Circle/Circle collision detector
-bool checkCollision(Circle& a, Circle& b);
+bool checkCollision(Circle& c1, Circle& c2);
 
 //Calculates distance squared between two points
-double distanceSquared(int x1, int y1, int x2, int y2);
+double distanceSquared(Point p1, Point p2);

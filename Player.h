@@ -72,7 +72,7 @@ public:
 	void render(LTexture& gDotTexture);
 
 	//Gets collision circle
-	Circle& getCollider();
+	const Circle& getCollider();
 
 	void updatePlayerDirection(float angle);
 

@@ -1,23 +1,17 @@
 #include "Constants.h"
 
-bool checkCollision(Circle& a, Circle& b)
+bool checkCollision(Circle& c1, Circle& c2)
 {
     //Calculate total radius squared
-    int totalRadiusSquared = a.r + b.r;
+    int totalRadiusSquared = c1.r + c2.r;
     totalRadiusSquared = totalRadiusSquared * totalRadiusSquared;
 
-    //If the distance between the centers of the circles is less than the sum of their radii
-    if (distanceSquared(a.x, a.y, b.x, b.y) < (totalRadiusSquared))
-    {
-        //The circles have collided
-        return true;
-    }
-    return false;
+    return (distanceSquared(c1.origin, c2.origin)) < (totalRadiusSquared);
 }
 
-double distanceSquared(int x1, int y1, int x2, int y2)
+double distanceSquared(Point p1, Point p2)
 {
-    int deltaX = x2 - x1;
-    int deltaY = y2 - y1;
+    int deltaX = p1.y - p1.x;
+    int deltaY = p2.y - p2.x;
     return deltaX * deltaX + deltaY * deltaY;
 }

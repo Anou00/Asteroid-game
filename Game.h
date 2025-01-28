@@ -6,7 +6,7 @@
 
 struct GameState {
 
-	Player player {Player::player_WIDTH / 2, Player::player_HEIGHT / 2, 30000, 40};
+	Player player {Player::player_WIDTH / 2, Player::player_HEIGHT / 2, player_lives, player_direction};
 	std::vector<Rocks> rocks {number_of_rocks_being_drawn};
 	Bullet bullet{(double)(player.get_tip_triangle_position().first), (double)(player.get_tip_triangle_position().second)};
 };
@@ -29,7 +29,6 @@ public:
 		void update_rotation_of_player(int mouse_x, int mouse_y);
 		int move_player();
 		void movePositionXandYForPlayer();
-
 
 		//bullets
 		void handleEvent_fire(SDL_Event& e);

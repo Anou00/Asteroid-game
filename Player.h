@@ -91,6 +91,15 @@ public:
 		return mPosY;
 	}
 
+	struct Point {
+		int x;
+		int y;
+	};
+
+	Point get_m_x_and_y() const {
+		return { mPosX, mPosY };
+	}
+
 	int get_width() const {
 		return player_WIDTH;
 	}

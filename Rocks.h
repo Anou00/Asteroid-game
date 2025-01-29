@@ -45,6 +45,15 @@ class Rocks {
 			return m_y;
 		}
 
+		struct Point {
+			int x;
+			int y;
+		};
+
+		Point get_m_x_and_y() const {
+			return { m_x, m_y };
+		}
+
 		int get_m_velocity_x() const
 		{
 			return m_velocity_x;

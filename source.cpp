@@ -29,11 +29,44 @@ bool loadMedia();
 //Frees media and shuts down SDL
 void close();
 
-//The window we'll be rendering to
-SDL_Window* gWindow = nullptr;
+class Window {
+public:
+	explicit Window(char const* title, SDL_Point const pos, SDL_Point const size, std::uint32_t const flags = {})
+		: m_window(SDL_CreateWindow(title, pos.x, pos.y, size.x, size.y, flags)) {}
 
-//The window renderer
-SDL_Renderer* gRenderer = nullptr;
+	SDL_Window* get() const { return m_window.get(); }
+
+private:
+	struct Deleter {
+		//struct sdl_deleter
+		void operator()(SDL_Window* p) const { SDL_DestroyWindow(p); }
+	};
+
+	std::unique_ptr<SDL_Window, Deleter> m_window{};
+};
+
+std::unique_ptr<Window> gWindow;
+
+
+class Renderer {
+public:
+	explicit Renderer(SDL_Window* window, int index = -1,
+		std::uint32_t flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC)
+		: m_renderer(SDL_CreateRenderer(window, index, flags), Deleter{}) {}
+
+	SDL_Renderer* get() const { return m_renderer.get(); }
+
+private:
+	struct Deleter {
+		//struct sdl_deleter
+		void operator()(SDL_Renderer* p) const { SDL_DestroyRenderer(p); }
+	};
+
+	std::unique_ptr<SDL_Renderer, Deleter> m_renderer{};
+};
+
+std::unique_ptr<Renderer> gRenderer;
+
 
 //Scene textures
 LTexture gDotTexture;
@@ -61,7 +94,11 @@ bool init()
 		}
 
 		//Create window
-		gWindow = SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+		//Create window
+		SDL_Point pos{ SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED };
+		SDL_Point size{ SCREEN_WIDTH, SCREEN_HEIGHT };
+		gWindow = std::make_unique<Window>("SDL Tutorial", pos, size, SDL_WINDOW_SHOWN);
+
 		if (gWindow == nullptr)
 		{
 			printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
@@ -70,7 +107,9 @@ bool init()
 		else
 		{
 			//Create vsynced renderer for window
-			gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+			gRenderer = std::make_unique<Renderer>(gWindow.get()->get(), -1,
+				SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+
 			if (gRenderer == nullptr)
 			{
 				printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
@@ -79,7 +118,7 @@ bool init()
 			else
 			{
 				//Initialize renderer color
-				SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+				SDL_SetRenderDrawColor(gRenderer.get()->get(), 0xFF, 0xFF, 0xFF, 0xFF);
 
 				//Initialize PNG loading
 				int imgFlags = IMG_INIT_PNG;
@@ -147,12 +186,6 @@ void close()
 	grock_image.free();
 	gbullet_image.free();
 
-	//Destroy window	
-	SDL_DestroyRenderer(gRenderer);
-	SDL_DestroyWindow(gWindow);
-	gWindow = nullptr;
-	gRenderer = nullptr;
-
 	//Quit SDL subsystems
 	IMG_Quit();
 	SDL_Quit();
@@ -172,7 +205,7 @@ SDL_Texture* loadTexture(std::string path)
 	else
 	{
 		//Create texture from surface pixels
-		newTexture = SDL_CreateTextureFromSurface(gRenderer, loadedSurface);
+		newTexture = SDL_CreateTextureFromSurface(gRenderer.get()->get(), loadedSurface);
 		if (newTexture == nullptr)
 		{
 			printf("Unable to create texture from %s! SDL Error: %s\n", path.c_str(), SDL_GetError());
@@ -219,7 +252,7 @@ bool LTexture::loadFromFile(std::string path)
 		SDL_SetColorKey(loadedSurface, SDL_TRUE, SDL_MapRGB(loadedSurface->format, 0, 0xFF, 0xFF));
 
 		//Create texture from surface pixels
-		newTexture = SDL_CreateTextureFromSurface(gRenderer, loadedSurface);
+		newTexture = SDL_CreateTextureFromSurface(gRenderer.get()->get(), loadedSurface);
 		if (newTexture == nullptr)
 		{
 			printf("Unable to create texture from %s! SDL Error: %s\n", path.c_str(), SDL_GetError());
@@ -252,7 +285,7 @@ bool LTexture::loadFromRenderedText(std::string textureText, SDL_Color textColor
 	if (textSurface != nullptr)
 	{
 		//Create texture from surface pixels
-		mTexture = SDL_CreateTextureFromSurface(gRenderer, textSurface);
+		mTexture = SDL_CreateTextureFromSurface(gRenderer.get()->get(), textSurface);
 		if (mTexture == nullptr)
 		{
 			printf("Unable to create texture from rendered text! SDL Error: %s\n", SDL_GetError());
@@ -321,7 +354,7 @@ void LTexture::render(int x, int y, SDL_Rect* clip, double angle, SDL_Point* cen
 	}
 
 	//Render to screen
-	SDL_RenderCopyEx(gRenderer, mTexture, clip, &renderQuad, angle, center, flip);
+	SDL_RenderCopyEx(gRenderer.get()->get(), mTexture, clip, &renderQuad, angle, center, flip);
 }
 
 int LTexture::getWidth()
@@ -394,14 +427,14 @@ int main(int argc, char* argv[]) {
 				if (lives <= 0) quit = true;
 
 				//Clear screen
-				SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
-				SDL_RenderClear(gRenderer);
+				SDL_SetRenderDrawColor(gRenderer.get()->get(), 0xFF, 0xFF, 0xFF, 0xFF);
+				SDL_RenderClear(gRenderer.get()->get());
 
 				//render the rock images here so they're drawn above the player or dot when they collide.
 				game.render_rocks(grock_image, gSpriteClips);
 
 				//Render objects
-				if (SDL_RenderGeometry(gRenderer, nullptr, game.state.player.triangleVertex, 3, nullptr, 0) < 0) { SDL_Log("%s\n", SDL_GetError()); }
+				if (SDL_RenderGeometry(gRenderer.get()->get(), nullptr, game.state.player.triangleVertex, 3, nullptr, 0) < 0) { SDL_Log("%s\n", SDL_GetError()); }
 
 				// Render the player 
 				SDL_Vertex* vertices = game.state.player.getVertices();
@@ -411,7 +444,7 @@ int main(int argc, char* argv[]) {
 				game.render_and_shoot_bullet(gbullet_image, gbullet);
 
 				//Update screen
-				SDL_RenderPresent(gRenderer);
+				SDL_RenderPresent(gRenderer.get()->get());
 
 			}
 		}
